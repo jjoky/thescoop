@@ -30,7 +30,7 @@ const routes = {
     'PUT': downvoteArticle
   },
   '/comments': {
-
+    'POST': createComment
   },
   '/comments/:id': {
 
@@ -252,6 +252,65 @@ function downvote(item, username) {
     item.downvotedBy.push(username);
   }
   return item;
+}
+
+/*
+function createArticle(url, request) {
+  const requestArticle = request.body && request.body.article;
+  const response = {};
+
+  if (requestArticle && requestArticle.title && requestArticle.url &&
+      requestArticle.username && database.users[requestArticle.username]) {
+    const article = {
+      id: database.nextArticleId++,
+      title: requestArticle.title,
+      url: requestArticle.url,
+      username: requestArticle.username,
+      commentIds: [],
+      upvotedBy: [],
+      downvotedBy: []
+    };
+
+    database.articles[article.id] = article;
+    database.users[article.username].articleIds.push(article.id);
+
+    response.body = {article: article};
+    response.status = 201;
+  } else {
+    response.status = 400;
+  }
+
+  return response;
+}
+*/
+
+function createComment(url, request) {
+  const requestComment = request.body && request.body.comment;
+  const response = {};
+
+  if (requestComment && requestComment.body && requestComment.username &&
+    requestComment.articleId && database.users[requestComment.username] &&
+    database.articles[requestComment.articleId]) {
+    const comment = {
+      id: database.nextCommentId++,
+      body: requestComment.body,
+      username: requestComment.username,
+      articleId: requestComment.articleId,
+      upvotedBy: [],
+      downvotedBy : []
+    };
+
+    database.comments[comment.id] = comment;
+    database.users[comment.username].commentIds.push(comment.id);
+    database.articles[comment.articleId].commentIds.push(comment.id);
+
+    response.body = {comment: comment};
+    response.status = 201;
+  } else {
+    response.status = 400;
+  }
+
+  return response;
 }
 
 // Write all code above this line.
