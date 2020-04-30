@@ -33,13 +33,13 @@ const routes = {
     'POST': createComment
   },
   '/comments/:id': {
-
+    'PUT': updateComment
   },
   '/comments/:id/upvote': {
 
   },
   '/comments/:id/downvote': {
-    
+
   }
 };
 
@@ -50,9 +50,9 @@ function getUser(url, request) {
 
   if (user) {
     const userArticles = user.articleIds.map(
-        articleId => database.articles[articleId]);
+      articleId => database.articles[articleId]);
     const userComments = user.commentIds.map(
-        commentId => database.comments[commentId]);
+      commentId => database.comments[commentId]);
     response.body = {
       user: user,
       userArticles: userArticles,
@@ -73,7 +73,7 @@ function getOrCreateUser(url, request) {
   const response = {};
 
   if (database.users[username]) {
-    response.body = {user: database.users[username]};
+    response.body = { user: database.users[username] };
     response.status = 200;
   } else if (username) {
     const user = {
@@ -83,7 +83,7 @@ function getOrCreateUser(url, request) {
     };
     database.users[username] = user;
 
-    response.body = {user: user};
+    response.body = { user: user };
     response.status = 201;
   } else {
     response.status = 400;
@@ -98,9 +98,9 @@ function getArticles(url, request) {
   response.status = 200;
   response.body = {
     articles: Object.keys(database.articles)
-        .map(articleId => database.articles[articleId])
-        .filter(article => article)
-        .sort((article1, article2) => article2.id - article1.id)
+      .map(articleId => database.articles[articleId])
+      .filter(article => article)
+      .sort((article1, article2) => article2.id - article1.id)
   };
 
   return response;
@@ -115,7 +115,7 @@ function getArticle(url, request) {
     article.comments = article.commentIds.map(
       commentId => database.comments[commentId]);
 
-    response.body = {article: article};
+    response.body = { article: article };
     response.status = 200;
   } else if (id) {
     response.status = 404;
@@ -131,7 +131,7 @@ function createArticle(url, request) {
   const response = {};
 
   if (requestArticle && requestArticle.title && requestArticle.url &&
-      requestArticle.username && database.users[requestArticle.username]) {
+    requestArticle.username && database.users[requestArticle.username]) {
     const article = {
       id: database.nextArticleId++,
       title: requestArticle.title,
@@ -145,7 +145,7 @@ function createArticle(url, request) {
     database.articles[article.id] = article;
     database.users[article.username].articleIds.push(article.id);
 
-    response.body = {article: article};
+    response.body = { article: article };
     response.status = 201;
   } else {
     response.status = 400;
@@ -168,7 +168,7 @@ function updateArticle(url, request) {
     savedArticle.title = requestArticle.title || savedArticle.title;
     savedArticle.url = requestArticle.url || savedArticle.url;
 
-    response.body = {article: savedArticle};
+    response.body = { article: savedArticle };
     response.status = 200;
   }
 
@@ -207,7 +207,7 @@ function upvoteArticle(url, request) {
   if (savedArticle && database.users[username]) {
     savedArticle = upvote(savedArticle, username);
 
-    response.body = {article: savedArticle};
+    response.body = { article: savedArticle };
     response.status = 200;
   } else {
     response.status = 400;
@@ -225,7 +225,7 @@ function downvoteArticle(url, request) {
   if (savedArticle && database.users[username]) {
     savedArticle = downvote(savedArticle, username);
 
-    response.body = {article: savedArticle};
+    response.body = { article: savedArticle };
     response.status = 200;
   } else {
     response.status = 400;
@@ -254,36 +254,6 @@ function downvote(item, username) {
   return item;
 }
 
-/*
-function createArticle(url, request) {
-  const requestArticle = request.body && request.body.article;
-  const response = {};
-
-  if (requestArticle && requestArticle.title && requestArticle.url &&
-      requestArticle.username && database.users[requestArticle.username]) {
-    const article = {
-      id: database.nextArticleId++,
-      title: requestArticle.title,
-      url: requestArticle.url,
-      username: requestArticle.username,
-      commentIds: [],
-      upvotedBy: [],
-      downvotedBy: []
-    };
-
-    database.articles[article.id] = article;
-    database.users[article.username].articleIds.push(article.id);
-
-    response.body = {article: article};
-    response.status = 201;
-  } else {
-    response.status = 400;
-  }
-
-  return response;
-}
-*/
-
 function createComment(url, request) {
   const requestComment = request.body && request.body.comment;
   const response = {};
@@ -297,17 +267,37 @@ function createComment(url, request) {
       username: requestComment.username,
       articleId: requestComment.articleId,
       upvotedBy: [],
-      downvotedBy : []
+      downvotedBy: []
     };
 
     database.comments[comment.id] = comment;
     database.users[comment.username].commentIds.push(comment.id);
     database.articles[comment.articleId].commentIds.push(comment.id);
 
-    response.body = {comment: comment};
+    response.body = { comment: comment };
     response.status = 201;
   } else {
     response.status = 400;
+  }
+
+  return response;
+}
+
+function updateComment(url, request) {
+  const id = Number(url.split('/').filter(segment => segment)[1]);
+  const savedComment = database.comments[id];
+  const requestComment = request.body && request.body.comment;
+  const response = {};
+
+  if (!id || !requestComment) {
+    response.status = 400;
+  } else if (!savedComment) {
+    response.status = 404;
+  } else {
+    savedComment.body = requestComment.body || savedComment.body;
+
+    response.body = {comment: savedComment};
+    response.status = 200;
   }
 
   return response;
@@ -340,7 +330,7 @@ const requestHandler = (request, response) => {
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   response.setHeader(
-      'Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    'Access-Control-Allow-Headers', 'X-Requested-With,content-type');
 
   if (!routes[route] || !routes[route][method]) {
     response.statusCode = 400;
@@ -359,7 +349,7 @@ const requestHandler = (request, response) => {
       body.push(chunk);
     }).on('end', () => {
       body = JSON.parse(Buffer.concat(body).toString());
-      const jsonRequest = {body: body};
+      const jsonRequest = { body: body };
       const methodResponse = routes[route][method].call(null, url, jsonRequest);
       !isTestMode && (typeof saveDatabase === 'function') && saveDatabase();
 
