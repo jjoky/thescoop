@@ -40,7 +40,7 @@ const routes = {
     'PUT': upvoteComment
   },
   '/comments/:id/downvote': {
-
+    'PUT': downvoteComment
   }
 };
 
@@ -135,7 +135,7 @@ function createArticle(url, request) {
     requestArticle.username && database.users[requestArticle.username]) {
     const article = {
       id: database.nextArticleId++,
-      title: requestArticle.title + 'Yo yo',
+      title: requestArticle.title,
       url: requestArticle.url,
       username: requestArticle.username,
       commentIds: [],
@@ -330,6 +330,23 @@ function upvoteComment (url, request) {
 
   if (savedComment && database.users[username]) {
     savedComment = upvote(savedComment, username);
+
+    response.body = { comment: savedComment };
+    response.status = 200;
+  } else {
+    response.status = 400;
+  }
+  return response;
+}
+
+function downvoteComment (url, request) {
+  const id = Number(url.split('/').filter(segment => segment)[1]);
+  const username = request.body && request.body.username;
+  let savedComment = database.comments[id];
+  const response = {};
+
+  if (savedComment && database.users[username]) {
+    savedComment = downvote(savedComment, username);
 
     response.body = { comment: savedComment };
     response.status = 200;
